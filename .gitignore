@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/*.code-snippets
+coverage
+.DS_Store
+Thumbs.db
+*.vsix
