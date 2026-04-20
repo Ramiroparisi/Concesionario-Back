@@ -1,7 +1,10 @@
 import { PrimaryKey, Property } from '@mikro-orm/decorators/legacy';
+import { OptionalProps } from '@mikro-orm/core';
 
 export abstract class BaseEntity {
   
+  [OptionalProps]?: 'fechaCreacion' | 'fechaActualizacion' | 'id';
+
   @PrimaryKey()
   id!: number;
 

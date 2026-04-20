@@ -8,6 +8,12 @@ export enum EstadoReserva {
   FINALIZADA = 'Finalizada',
 }
 
+export enum FormaPago {
+  EFECTIVO = 'Efectivo',
+  MERCADO_PAGO = 'Mercado Pago',
+  TRANSFERENCIA = 'Transferencia'
+}
+
 @Entity()
 export class Reserva extends BaseEntity {
 
@@ -40,6 +46,9 @@ export class Reserva extends BaseEntity {
 
   @Property({ nullable: true })
   mp_preference_id?: string;
+
+  @Enum(() => FormaPago)
+formaPago: FormaPago = FormaPago.MERCADO_PAGO;
 
   @ManyToOne(() => Vehiculo)
   vehiculo!: Vehiculo;
