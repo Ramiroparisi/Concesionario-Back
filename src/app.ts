@@ -1,19 +1,17 @@
 import express from 'express';
 import 'reflect-metadata';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import config from './shared/db/orm.js'; 
 
-import { marcaRouter } from './marca/marca.routes.js';
-import { modeloRouter } from './modelo/modelo.routes.js';
-import { vehiculoRouter } from './vehiculo/vehiculo.routes.js';
-import { multimediaRouter } from './multimedia/multimedia.routes.js';
-import { usuarioRouter } from './usuario/usuario.routes.js';
-import { reservaRouter } from './reserva/reserva.routes.js';
+import { appRouter } from './routes.js';
 
 import { iniciarCronReservas } from './reserva/reserva.cron.js';
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 async function bootstrap() {
   try {
@@ -27,14 +25,13 @@ async function bootstrap() {
       RequestContext.create(orm.em, next);
     });
     iniciarCronReservas(orm);
-    
-    // las rutas de negocio van acá
-    app.use('/api/marcas', marcaRouter);
-    app.use('/api/modelos', modeloRouter);
-    app.use('/api/vehiculos', vehiculoRouter);
-    app.use('/api/multimedias', multimediaRouter);
-    app.use('/api/usuarios', usuarioRouter);
-    app.use('/api/reservas', reservaRouter);
+
+  app.use(cors({
+  origin: 'http://localhost:3001',
+  credentials: true,
+  }));
+
+    app.use('/api', appRouter);
 
     app.use((_, res) => {
       res.status(404).json({ message: 'Recurso no encontrado' });

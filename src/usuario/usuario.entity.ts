@@ -1,7 +1,8 @@
-import { Entity, Property, Enum, OneToMany} from '@mikro-orm/decorators/legacy';
+import { Entity, Property, Enum, OneToMany, BeforeCreate, BeforeUpdate} from '@mikro-orm/decorators/legacy';
 import { Collection } from '@mikro-orm/core';
 import { Vehiculo } from '../vehiculo/vehiculo.entity.js';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
+import { hashPassword } from '../shared/utils/password.utils.js';
 
 export enum RolUsuario{
   ADMIN = 'Admin',
@@ -31,4 +32,12 @@ export class Usuario extends BaseEntity{
 
   @OneToMany(() => Vehiculo, (vehiculo) => vehiculo.vendedor)
   vehiculosVendidos = new Collection<Vehiculo>(this);
+
+  @BeforeCreate()
+  @BeforeUpdate()
+  async hashPasswordHook() {
+    if (this.contrasena && !this.contrasena.startsWith('$2b$')) {
+      this.contrasena = await hashPassword(this.contrasena); 
+    }
+  }
 }

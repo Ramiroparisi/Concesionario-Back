@@ -49,6 +49,11 @@ export const add = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Ya existe un usuario con este correo electrónico' });
     }
 
+    const telefonoExistente = await em.findOne(Usuario, { telefono: input.telefono });
+    if (telefonoExistente) {
+      return res.status(400).json({ message: 'Ya existe un usuario con este número de teléfono' });
+    }
+
     const nuevoUsuario = em.create(Usuario, input);
     await em.persist(nuevoUsuario).flush();
     
@@ -66,7 +71,7 @@ export const update = async (req: Request, res: Response) => {
     const usuarioToUpdate = await em.findOne(Usuario, id);
     if (!usuarioToUpdate) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
+    }    
     em.assign(usuarioToUpdate, input);
     await em.flush();
     res.status(200).json({ 
