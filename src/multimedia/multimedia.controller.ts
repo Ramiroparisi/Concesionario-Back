@@ -26,8 +26,9 @@ export const findAll = async (req: Request, res: Response) => {
     const em = RequestContext.getEntityManager()!;
     const multimedias = await em.find(Multimedia, {}, { populate: ['vehiculo'] });
     res.status(200).json({ data: multimedias });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -42,8 +43,9 @@ export const findByVehiculo = async (req: Request, res: Response) => {
       { orderBy: { orden: 'ASC' } }
     );
     res.status(200).json({ data: multimedias });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -60,8 +62,9 @@ export const add = async (req: Request, res: Response) => {
     await em.persist(nuevaMultimedia).flush();
     
     res.status(201).json({ message: 'Multimedia creada', data: nuevaMultimedia });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -76,7 +79,8 @@ export const remove = async (req: Request, res: Response) => {
     }
     await em.remove(multimedia).flush();
     res.status(200).json({ message: 'Multimedia eliminada' }); 
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };

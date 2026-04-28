@@ -36,8 +36,9 @@ export const findAll = async (req: Request, res: Response) => {
     const em = RequestContext.getEntityManager()!;
     const reservas = await em.find(Reserva, {}, { populate: ['vehiculo'] });
     res.status(200).json({ data: reservas });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -69,8 +70,9 @@ export const addOnline = async (req: Request, res: Response) => {
     await em.persist([nuevaReserva, autoAReservar]).flush();
     
     res.status(201).json({ message: 'Reserva generada con éxito', data: nuevaReserva });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -100,8 +102,9 @@ export const addPresencial = async (req: Request, res: Response) => {
 
     await em.persist([nuevaReserva, autoAReservar]).flush();
     res.status(201).json({ message: 'Seña en efectivo registrada con éxito', data: nuevaReserva });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -124,8 +127,9 @@ export const update = async (req: Request, res: Response) => {
     em.assign(reservaToUpdate, input);
     await em.flush();
     res.status(200).json({ message: 'Reserva actualizada', data: reservaToUpdate });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -145,7 +149,8 @@ export const remove = async (req: Request, res: Response) => {
 
     await em.remove(reserva).flush();
     res.status(200).json({ message: 'Reserva eliminada' }); 
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };

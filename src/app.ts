@@ -6,12 +6,9 @@ import { MikroORM, RequestContext } from '@mikro-orm/core';
 import config from './shared/db/orm.js'; 
 
 import { appRouter } from './routes.js';
-
 import { iniciarCronReservas } from './reserva/reserva.cron.js';
 
 const app = express();
-app.use(express.json());
-app.use(cookieParser());
 
 async function bootstrap() {
   try {
@@ -20,16 +17,21 @@ async function bootstrap() {
       await orm.schema.update();
     }
     console.log('Se ha realizado la conexión a la bdd');
+    app.use(cors({
+      origin: 'http://localhost:3001',
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    }));
+
+    app.use(express.json());
+    app.use(cookieParser());
 
     app.use((req, res, next) => {
       RequestContext.create(orm.em, next);
     });
-    iniciarCronReservas(orm);
 
-  app.use(cors({
-  origin: 'http://localhost:3001',
-  credentials: true,
-  }));
+    iniciarCronReservas(orm);
 
     app.use('/api', appRouter);
 
@@ -37,8 +39,9 @@ async function bootstrap() {
       res.status(404).json({ message: 'Recurso no encontrado' });
     });
 
-    app.listen(3000, () => {
-      console.log('Server running on http://localhost:3000/');
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}/`);
     });
 
   } catch (error) {

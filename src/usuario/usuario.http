@@ -1,0 +1,11 @@
+POST http://localhost:3000/api/usuarios
+Content-Type: application/json
+
+{
+  "mail": "admin@gmail.com",
+  "contrasena": "12345678",
+  "nombre": "Ramiro",
+  "apellido": "Parisi",
+  "telefono": "3413932450",
+  "rol": "Admin"
+}

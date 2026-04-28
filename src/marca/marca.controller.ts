@@ -23,8 +23,26 @@ export const findAll = async (req: Request, res: Response) => {
     const em = RequestContext.getEntityManager()!;
     const marcas = await em.find(Marca, {}, { populate: ['modelos'] });
     res.status(200).json({ data: marcas });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
+  }
+};
+
+export const getMarcaById = async (req: Request, res: Response) => {
+  try {
+    const em = RequestContext.getEntityManager()!;
+    const id = Number.parseInt(req.params.id as string);
+    const marca = await em.findOne(Marca, id, { populate: ['modelos'] }); 
+    
+    if (!marca) {
+      return res.status(404).json({ message: 'Marca no encontrada' });
+    }
+    
+    return res.status(200).json({ data: marca });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    return res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -34,8 +52,9 @@ export const add = async (req: Request, res: Response) => {
     const nuevaMarca = em.create(Marca, req.body.sanitizedInput);
     await em.persist(nuevaMarca).flush();
     res.status(201).json({ message: 'Marca creada', data: nuevaMarca });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -54,8 +73,9 @@ export const update = async (req: Request, res: Response) => {
       message: 'Marca actualizada exitosamente', 
       data: marcaToUpdate 
     });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -76,7 +96,8 @@ export const remove = async (req: Request, res: Response) => {
 
     await em.remove(marca).flush();
     res.status(200).json({ message: 'Marca eliminada' }); 
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };

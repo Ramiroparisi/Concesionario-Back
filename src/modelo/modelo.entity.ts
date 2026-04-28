@@ -20,6 +20,9 @@ export class Modelo extends BaseEntity {
   motor!: string;
 
   @Property()
+  potencia!: number;
+
+  @Property()
   transmision!: string;
 
   @ManyToOne(() => Marca)

@@ -3,6 +3,7 @@ import { RequestContext } from '@mikro-orm/core';
 import jwt from 'jsonwebtoken';
 import { Usuario } from '../usuario/usuario.entity.js';
 import { comparePassword } from '../shared/utils/password.utils.js';
+import { CustomRequest } from './authMiddleware.js';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -21,15 +22,16 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { id: usuario.id, rol: usuario.rol }, 
-      process.env.JWT_SECRET as string
+      process.env.JWT_SECRET!
     );
     
     const diez_a = 10 * 365 * 24 * 60 * 60 * 1000; 
     res.cookie('token', token, {
       httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'strict', 
+      secure: false,
+      sameSite: 'lax', 
       maxAge: diez_a,
+      path: '/',
     });
 
     res.status(200).json({ 
@@ -41,7 +43,19 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+export const verifyToken = (req: CustomRequest, res: Response) => {
+  return res.status(200).json({ 
+    valid: true, 
+    user: req.user 
+  });
+};
+
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie('token');
-  res.status(200).json({ message: 'Sesión cerrada exitosamente' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    path: '/'
+  });
+  return res.status(200).json({ message: "Sesión cerrada" });
 };

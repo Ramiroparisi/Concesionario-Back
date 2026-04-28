@@ -34,8 +34,9 @@ export const findAll = async (req: Request, res: Response) => {
     const em = RequestContext.getEntityManager()!;
     const vehiculos = await em.find(Vehiculo, {}, { populate: ['modelo'] });
     res.status(200).json({ data: vehiculos });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -65,8 +66,9 @@ export const add = async (req: Request, res: Response) => {
     const nuevoVehiculo = em.create(Vehiculo, input); 
     await em.persist(nuevoVehiculo).flush();
     res.status(201).json({ message: 'Vehículo creado', data: nuevoVehiculo });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -85,8 +87,9 @@ export const update = async (req: Request, res: Response) => {
       message: 'Vehículo modificado exitosamente',
       data: VehiculoToUpdate,
     });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 }
 
@@ -102,7 +105,8 @@ export const remove = async (req: Request, res: Response) => {
 
     await em.remove(vehiculo).flush();
     res.status(200).json({ message: 'Vehículo eliminado' }); 
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };

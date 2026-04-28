@@ -13,7 +13,10 @@ export const validateModelo = [
   
   body('motor')
     .isLength({ min: 2, max: 30 }).withMessage('El motor debe tener entre 2 y 30 caracteres.'),
-  
+
+    body('potencia')
+    .isInt({ min: 0 }).withMessage('La potencia debe ser un número entero no negativo.'),
+
   body('transmision')
     .isLength({ min: 2, max: 30 }).withMessage('La transmisión debe tener entre 2 y 30 caracteres.'),
 ];

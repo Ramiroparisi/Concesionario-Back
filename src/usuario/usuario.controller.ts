@@ -29,11 +29,28 @@ export const findAll = async (req: Request, res: Response) => {
     const em = RequestContext.getEntityManager()!;
     const usuarios = await em.find(Usuario, {}, { populate: ['vehiculosVendidos'] });
     res.status(200).json({ data: usuarios });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
+export const getUsuarioById = async (req: Request, res: Response) => {
+  try {
+    const em = RequestContext.getEntityManager()!;
+    const id = Number.parseInt(req.params.id as string);
+    const usuario = await em.findOne(Usuario, id); 
+    
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    return res.status(200).json({ data: usuario });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    return res.status(500).json({ message: errorMessage });
+  }
+};
 
 export const add = async (req: Request, res: Response) => {
   try {
@@ -58,8 +75,9 @@ export const add = async (req: Request, res: Response) => {
     await em.persist(nuevoUsuario).flush();
     
     res.status(201).json({ message: 'Usuario creado', data: nuevoUsuario });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -78,8 +96,9 @@ export const update = async (req: Request, res: Response) => {
       message: 'Usuario actualizado exitosamente', 
       data: usuarioToUpdate 
     });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
 
@@ -100,7 +119,8 @@ export const remove = async (req: Request, res: Response) => {
 
     await em.remove(usuario).flush();
     res.status(200).json({ message: 'Usuario eliminado con éxito' }); 
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
   }
 };
