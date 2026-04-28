@@ -21,10 +21,18 @@ export const validateVehiculo = [
     .isLength({ min: 10, max: 500 }).withMessage('La descripción debe tener entre 10 y 500 caracteres.')
     .notEmpty().withMessage('La descripción no puede estar vacía.'),
 
+  body('dimensiones')
+    .isLength({ min: 5, max: 100 }).withMessage('Las dimensiones deben tener entre 5 y 100 caracteres.')
+    .notEmpty().withMessage('Las dimensiones no pueden estar vacías.'),
+
   body('precio')
     .isFloat({ min: 0 }).withMessage('El precio debe ser un número decimal positivo.')
     .notEmpty().withMessage('El precio no puede estar vacío.'), 
  
+  body('moneda')
+    .isIn(['USD', 'ARS']).withMessage('La moneda debe ser "USD" o "ARS".')
+    .notEmpty().withMessage('La moneda no puede estar vacía.'),
+    
   body('estado')
     .isIn(['disponible', 'vendido', 'reservado']).withMessage('El estado debe ser "disponible", "vendido" o "reservado".')
     .notEmpty().withMessage('El estado no puede estar vacío.'),

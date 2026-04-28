@@ -13,6 +13,11 @@ export enum EstadoVehiculo {
   VENDIDO = 'Vendido',
 }
 
+export enum Moneda {
+  USD = 'USD',
+  $= 'ARS',
+}
+
 @Entity()
 export class Vehiculo extends BaseEntity {
 
@@ -36,6 +41,9 @@ export class Vehiculo extends BaseEntity {
 
   @Enum(() => EstadoVehiculo)
   estado: EstadoVehiculo = EstadoVehiculo.DISPONIBLE; 
+
+  @Enum(() => Moneda)
+  moneda: Moneda = Moneda.USD;
 
   @ManyToOne(() => Modelo)
   modelo!: Modelo;

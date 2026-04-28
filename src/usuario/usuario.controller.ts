@@ -14,6 +14,10 @@ export const sanitizeUsuarioInput = (
     apellido: req.body.apellido,
     telefono: req.body.telefono,
     rol: req.body.rol,
+    dni: req.body.dni,
+    domicilio: req.body.domicilio,
+    cuil: req.body.cuil,
+    fechaNac: req.body.fechaNac ? new Date(req.body.fechaNac) : undefined,
   };
   
   Object.keys(req.body.sanitizedInput).forEach((key) => {
@@ -64,6 +68,16 @@ export const add = async (req: Request, res: Response) => {
     const usuarioExistente = await em.findOne(Usuario, { mail: input.mail });
     if (usuarioExistente) {
       return res.status(400).json({ message: 'Ya existe un usuario con este correo electrónico' });
+    }
+
+    const dniExistente = await em.findOne(Usuario, { dni: input.dni });
+    if (dniExistente) {
+      return res.status(400).json({ message: 'Ya existe un usuario con este DNI' });
+    }
+
+    const cuilExistente = await em.findOne(Usuario, { cuil: input.cuil });
+    if (cuilExistente) {
+      return res.status(400).json({ message: 'Ya existe un usuario con este CUIL' });
     }
 
     const telefonoExistente = await em.findOne(Usuario, { telefono: input.telefono });

@@ -13,6 +13,22 @@ export const validateUsuario = [
     .isNumeric().withMessage('La contraseña debe contener al menos un número.')
     .notEmpty().withMessage('La contraseña no puede estar vacía.'),  
 
+  body('dni')
+    .isInt({ min: 1000000, max: 999999999 }).withMessage('El DNI debe tener entre 7 y 8 dígitos.')
+    .notEmpty().withMessage('El DNI no puede estar vacío.'),
+
+  body('domicilio')
+    .isLength({ min: 2, max: 100 }).withMessage('El domicilio debe tener entre 2 y 100 caracteres.')
+    .notEmpty().withMessage('El domicilio no puede estar vacío.'),
+
+  body('cuil')
+    .isInt({ min: 10000000000, max: 999999999999 }).withMessage('El CUIL debe tener 11 dígitos.')
+    .notEmpty().withMessage('El CUIL no puede estar vacío.'),
+
+  body('fechaNac')
+    .isDate().withMessage('La fecha de nacimiento debe ser una fecha válida.')
+    .notEmpty().withMessage('La fecha de nacimiento no puede estar vacía.'),
+
   body('nombre')
     .isLength({ min: 2, max: 30 }).withMessage('El nombre debe tener entre 2 y 30 caracteres.')
     .notEmpty().withMessage('El nombre no puede estar vacío.'),

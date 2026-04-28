@@ -49,6 +49,13 @@ export const getMarcaById = async (req: Request, res: Response) => {
 export const add = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
+    const inputNombre = req.body.sanitizedInput.nombre;
+    const marcaExistente = await em.findOne(Marca, { nombre: inputNombre });
+    
+    if (marcaExistente) {
+      return res.status(400).json({ message: `La marca '${inputNombre}' ya existe en el sistema.` });
+    }
+    
     const nuevaMarca = em.create(Marca, req.body.sanitizedInput);
     await em.persist(nuevaMarca).flush();
     res.status(201).json({ message: 'Marca creada', data: nuevaMarca });

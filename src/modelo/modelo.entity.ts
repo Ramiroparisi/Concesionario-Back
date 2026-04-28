@@ -1,4 +1,4 @@
-import { Entity, Property, ManyToOne, OneToMany } from '@mikro-orm/decorators/legacy';
+import { Entity, Property, ManyToOne, OneToMany, Unique } from '@mikro-orm/decorators/legacy';
 import { Cascade, Collection } from '@mikro-orm/core';
 import { Marca } from '../marca/marca.entity.js';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
@@ -7,7 +7,7 @@ import { Vehiculo } from '../vehiculo/vehiculo.entity.js';
 @Entity()
 export class Modelo extends BaseEntity {
 
-  @Property()
+  @Property({unique: true})
   nombre!: string;
 
   @Property()

@@ -1,4 +1,4 @@
-import { Entity, Property, OneToMany } from '@mikro-orm/decorators/legacy';
+import { Entity, Property, OneToMany, Unique } from '@mikro-orm/decorators/legacy';
 import { Collection, Cascade } from '@mikro-orm/core';
 import { Modelo } from '../modelo/modelo.entity.js'; 
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';

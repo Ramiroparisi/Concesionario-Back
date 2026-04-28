@@ -55,6 +55,11 @@ export const getModeloById = async (req: Request, res: Response) => {
 export const add = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
+    const inputNombre = req.body.sanitizedInput.nombre;
+    const modeloExistente = await em.findOne(Modelo, { nombre: inputNombre });        
+      if (modeloExistente) {
+        return res.status(400).json({ message: `El modelo '${inputNombre}' ya existe en el sistema.` });
+      }
     const nuevoModelo = em.create(Modelo, req.body.sanitizedInput);
     await em.persist(nuevoModelo).flush();
     res.status(201).json({ message: 'Modelo creado', data: nuevoModelo });

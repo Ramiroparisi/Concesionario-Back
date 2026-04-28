@@ -10,15 +10,16 @@ export const sanitizeVehiculoInput = (
   next: NextFunction
 ) => {
   req.body.sanitizedInput = {
-    kilometraje: req.body.kilometraje,
-    anio: req.body.anio,
-    patente: req.body.patente,
+    kilometraje: req.body.kilometraje ? Number(req.body.kilometraje) : undefined,
+    anio: req.body.anio ? Number(req.body.anio) : undefined,
+    patente: req.body.patente ? req.body.patente.trim().toUpperCase() : undefined,
     color: req.body.color,
     descripcion: req.body.descripcion,
-    precio: req.body.precio,
+    moneda: req.body.moneda,
+    precio: req.body.precio ? Number(req.body.precio) : undefined,
     estado: req.body.estado,
-    vendedor: req.body.vendedor,
-    modelo: req.body.modelo,
+    vendedor: req.body.vendedor ? Number(req.body.vendedor) : undefined,
+    modelo: req.body.modelo ? Number(req.body.modelo) : undefined,
   };
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
@@ -32,7 +33,9 @@ export const sanitizeVehiculoInput = (
 export const findAll = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
-    const vehiculos = await em.find(Vehiculo, {}, { populate: ['modelo'] });
+    const vehiculos = await em.find(Vehiculo, {}, { 
+      populate: ['modelo', 'modelo.marca', 'multimedia'] 
+    });
     res.status(200).json({ data: vehiculos });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';

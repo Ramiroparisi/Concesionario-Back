@@ -18,6 +18,18 @@ export class Usuario extends BaseEntity{
   @Property({ hidden: true })
   contrasena!: string;
 
+  @Property({ unique: true, nullable: true })
+  dni!: string;
+
+  @Property({ nullable: true })
+  domicilio!: string;
+
+  @Property({ unique: true, nullable: true })
+  cuil!: string;
+
+  @Property({ type: 'date', nullable: true })
+  fechaNac!: Date;
+
   @Property()
   nombre!: string;
 
