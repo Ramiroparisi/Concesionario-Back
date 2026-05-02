@@ -27,7 +27,7 @@ export class Vehiculo extends BaseEntity {
   @Property()
   anio!: number; 
 
-  @Property({ unique: true })
+  @Property({ unique: true , nullable: true})
   patente!: string; 
 
   @Property()

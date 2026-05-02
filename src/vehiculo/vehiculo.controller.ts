@@ -2,17 +2,28 @@ import { NextFunction, Request, Response } from 'express';
 import { RequestContext } from '@mikro-orm/core';
 import { Vehiculo } from './vehiculo.entity.js';
 import { Modelo } from '../modelo/modelo.entity.js';
-
+import { Multimedia } from '../multimedia/multimedia.entity.js';
+import fs from 'fs';
+import path from 'path';
 
 export const sanitizeVehiculoInput = (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  let patenteProcess;
+  if (req.body.patente === '' || req.body.patente === 'null' || req.body.patente === null) {
+    patenteProcess = null;
+  } else if (req.body.patente !== undefined) {
+    patenteProcess = req.body.patente.trim().toUpperCase();
+  } else {
+    patenteProcess = undefined;
+  }
+
   req.body.sanitizedInput = {
     kilometraje: req.body.kilometraje ? Number(req.body.kilometraje) : undefined,
     anio: req.body.anio ? Number(req.body.anio) : undefined,
-    patente: req.body.patente ? req.body.patente.trim().toUpperCase() : undefined,
+    patente: patenteProcess,
     color: req.body.color,
     descripcion: req.body.descripcion,
     moneda: req.body.moneda,
@@ -21,6 +32,7 @@ export const sanitizeVehiculoInput = (
     vendedor: req.body.vendedor ? Number(req.body.vendedor) : undefined,
     modelo: req.body.modelo ? Number(req.body.modelo) : undefined,
   };
+
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
       delete req.body.sanitizedInput[key];
@@ -28,7 +40,6 @@ export const sanitizeVehiculoInput = (
   });
   next();
 } 
-
 
 export const findAll = async (req: Request, res: Response) => {
   try {
@@ -43,9 +54,28 @@ export const findAll = async (req: Request, res: Response) => {
   }
 };
 
-export const add = async (req: Request, res: Response) => {
+export const findOne = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
+    const id = Number.parseInt(req.params.id as string);
+    const vehiculo = await em.findOne(Vehiculo, { id }, { 
+      populate: ['modelo', 'modelo.marca', 'multimedia'] 
+    });
+    
+    if (!vehiculo) {
+      return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+
+    res.status(200).json({ data: vehiculo });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    res.status(500).json({ message: errorMessage });
+  }
+};
+
+export const add = async (req: Request, res: Response) => {
+  try {
+    const em = req.app.locals.em.fork();
     const input = req.body.sanitizedInput;
 
     if (input.estado === 'Vendido' && !input.vendedor) {
@@ -56,9 +86,11 @@ export const add = async (req: Request, res: Response) => {
       input.vendedor = null; 
     }
 
-    const existingVehiculo = await em.findOne(Vehiculo, { patente: input.patente });
-    if (existingVehiculo) {
-      return res.status(400).json({ message: 'Ya existe un vehículo con esa patente' });
+    if (input.patente !== null) {
+      const existingVehiculo = await em.findOne(Vehiculo, { patente: input.patente });
+      if (existingVehiculo) {
+        return res.status(400).json({ message: 'Ya existe un vehículo con esa patente' });
+      }
     }
 
     const modelo = await em.findOne(Modelo, input.modelo);
@@ -66,7 +98,20 @@ export const add = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Modelo no encontrado' });
     }
 
-    const nuevoVehiculo = em.create(Vehiculo, input); 
+    const nuevoVehiculo = em.create(Vehiculo, input);
+    
+    if (req.files && Array.isArray(req.files)) {
+      const archivos = req.files as Express.Multer.File[];
+      archivos.forEach((archivo, index) => {
+        const nuevaFoto = em.create(Multimedia, {
+          archivo: archivo.filename,
+          vehiculo: nuevoVehiculo,
+          orden: index
+        });
+        em.persist(nuevaFoto);
+      });
+    }    
+    
     await em.persist(nuevoVehiculo).flush();
     res.status(201).json({ message: 'Vehículo creado', data: nuevoVehiculo });
   } catch (error: unknown) {
@@ -77,14 +122,35 @@ export const add = async (req: Request, res: Response) => {
 
 export const update = async (req: Request, res: Response) => {
   try {
-    const em = RequestContext.getEntityManager()!;
+    const em = req.app.locals.em.fork();
     const id = Number.parseInt(req.params.id as string);
-    const VehiculoToUpdate = await em.findOne(Vehiculo, { id });
+    const VehiculoToUpdate = await em.findOne(Vehiculo, { id }, { populate: ['multimedia'] });
     
     if (!VehiculoToUpdate) {
       return res.status(404).json({ message: 'Vehículo no encontrado' });
     }
+    
     em.assign(VehiculoToUpdate, req.body.sanitizedInput ?? req.body);
+    
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      VehiculoToUpdate.multimedia.getItems().forEach((m: Multimedia) => {
+      const filePath = path.resolve('uploads', m.archivo);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      });
+
+      VehiculoToUpdate.multimedia.removeAll();
+
+      const archivos = req.files as Express.Multer.File[];
+      archivos.forEach((archivo, index) => {
+        const nuevaFoto = em.create(Multimedia, {
+          archivo: archivo.filename,
+          vehiculo: VehiculoToUpdate,
+          orden: index
+        });
+        VehiculoToUpdate.multimedia.add(nuevaFoto);
+      });
+    }
+
     await em.flush();
     res.status(200).json({
       message: 'Vehículo modificado exitosamente',
@@ -100,11 +166,16 @@ export const remove = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
     const id = Number.parseInt(req.params.id as string);
-    const vehiculo = await em.findOne(Vehiculo, id, { populate: ['modelo'] });
+    const vehiculo = await em.findOne(Vehiculo, id, { populate: ['modelo', 'multimedia'] });
     
     if (!vehiculo) {
       return res.status(404).json({ message: 'Vehículo no encontrado' });
     }
+
+    vehiculo.multimedia.getItems().forEach((m: Multimedia) => {
+    const filePath = path.resolve('uploads', m.archivo);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  });
 
     await em.remove(vehiculo).flush();
     res.status(200).json({ message: 'Vehículo eliminado' }); 

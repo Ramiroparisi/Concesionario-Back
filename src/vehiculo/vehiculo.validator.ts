@@ -9,9 +9,8 @@ export const validateVehiculo = [
     .isInt({ min: 1950, max:3000 }).withMessage('El año debe ser un número entero positivo.')
     .notEmpty().withMessage('El año no puede estar vacío.'),
 
-  body('patente') //Poner cartel en el front avisando si un auto no está patentado
-    .isLength({ min: 0, max: 12 }).withMessage('La patente debe tener entre 0 y 12 caracteres.')
-    .notEmpty().withMessage('La patente no puede estar vacía.'),
+  body('patente')
+    .isLength({ min: 0, max: 12 }).withMessage('La patente debe tener entre 0 y 12 caracteres.'),
 
   body('color')
     .isLength({ min: 2, max: 30 }).withMessage('El color debe tener entre 2 y 30 caracteres.')

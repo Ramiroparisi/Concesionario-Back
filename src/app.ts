@@ -4,15 +4,20 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { MikroORM, RequestContext } from '@mikro-orm/core';
 import config from './shared/db/orm.js'; 
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 import { appRouter } from './routes.js';
 import { iniciarCronReservas } from './reserva/reserva.cron.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function bootstrap() {
   try {
     const orm = await MikroORM.init(config);
+    app.locals.em = orm.em;
     if (process.env.NODE_ENV !== 'production') {
       await orm.schema.update();
     }
@@ -26,6 +31,7 @@ async function bootstrap() {
 
     app.use(express.json());
     app.use(cookieParser());
+    app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
     app.use((req, res, next) => {
       RequestContext.create(orm.em, next);
