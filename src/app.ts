@@ -9,6 +9,7 @@ import path from 'path';
 
 import { appRouter } from './routes.js';
 import { iniciarCronReservas } from './reserva/reserva.cron.js';
+import { reservaRouter } from './reserva/reserva.routes.js';
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +33,7 @@ async function bootstrap() {
     app.use(express.json());
     app.use(cookieParser());
     app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+    app.use('/reservas', reservaRouter);
 
     app.use((req, res, next) => {
       RequestContext.create(orm.em, next);

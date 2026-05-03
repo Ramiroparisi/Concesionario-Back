@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { RequestContext } from '@mikro-orm/core';
-import { Reserva, EstadoReserva, FormaPago } from './reserva.entity.js';
+import { Reserva, EstadoReserva, FormaPago, EstadoPago } from './reserva.entity.js';
 import { Vehiculo, EstadoVehiculo } from '../vehiculo/vehiculo.entity.js';
+import { enviarEmailsReserva } from '../shared/utils/email.service.js';
+import { Preference } from 'mercadopago/dist/clients/preference/index.js';
+import { MercadoPagoConfig } from 'mercadopago/dist/mercadoPagoConfig.js';
 
 export const sanitizeReservaInput = (
   req: Request,
@@ -120,7 +123,7 @@ export const update = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Reserva no encontrada' });
     }
 
-    if (input.estado === EstadoReserva.VENCIDA && reservaToUpdate.estado !== EstadoReserva.VENCIDA) {
+    if (input.estado === EstadoReserva.VENCIDA && reservaToUpdate.estadoReserva !== EstadoReserva.VENCIDA) {
       reservaToUpdate.vehiculo.estado = EstadoVehiculo.DISPONIBLE;
     }
 
@@ -143,7 +146,7 @@ export const remove = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Reserva no encontrada' });
     }
 
-    if (reserva.estado === EstadoReserva.ACTIVA) {
+    if (reserva.estadoReserva === EstadoReserva.ACTIVA) {
       reserva.vehiculo.estado = EstadoVehiculo.DISPONIBLE;
     }
 
@@ -152,5 +155,109 @@ export const remove = async (req: Request, res: Response) => {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     res.status(500).json({ message: errorMessage });
+  }
+};
+
+
+const client = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN as string});
+
+export const crearPreferencia = async (req: Request, res: Response) => {
+  try {
+    const em = req.app.locals.em.fork();
+    const { vehiculo_id, vehiculoId, nombreCli, nombre, apellidoCli, apellido, dni, mail, telefono, importe } = req.body;
+
+    const idFinal = vehiculo_id || vehiculoId;
+    const nombreFinal = nombreCli || nombre;
+    const apellidoFinal = apellidoCli || apellido;    
+    
+    if (!idFinal) {
+       return res.status(400).json({ message: 'El ID del vehículo es obligatorio' });
+    }
+
+    if (!nombreFinal || !apellidoFinal) {
+      return res.status(400).json({ message: 'El nombre y apellido son obligatorios' });
+    }
+
+    const vehiculo = await em.findOne(Vehiculo, idFinal, { populate: ['modelo', 'modelo.marca'] });
+    if (!vehiculo) {
+        return res.status(404).json({ message: 'Vehículo no encontrado' });
+    }
+
+const preferenciaData = {
+      body: {
+        items: [{
+          id: vehiculo.id.toString(),
+          title: `Reserva ${vehiculo.modelo.marca.nombre} ${vehiculo.modelo.nombre}`,
+          quantity: 1,
+          unit_price: Number(importe),
+          currency_id: 'ARS'
+        }],
+        payer: {
+          email: mail,
+          name: nombreCli,
+          surname: apellidoCli
+        },
+        back_urls: {
+          success: `http://localhost:3001/Vehiculos/${vehiculo.id}`,
+          failure: `http://localhost:3001/Vehiculos/${vehiculo.id}`,
+          pending: `http://localhost:3001/Vehiculos/${vehiculo.id}`
+        }
+        // auto_return: 'approved' 
+      }
+    };
+    console.log("Objeto a enviar a Mercado Pago:", JSON.stringify(preferenciaData, null, 2));
+
+    const preference = new Preference(client);
+    const response = await preference.create(preferenciaData);
+
+    const fechaVenc = new Date();
+    fechaVenc.setHours(fechaVenc.getHours() + 24); 
+
+    const nuevaReserva = em.create(Reserva, {
+      nombreCli: nombreFinal,
+      apellidoCli: apellidoFinal,
+      dni,
+      mail,
+      telefono,
+      importe: Number(importe),
+      fechaVenc,
+      mp_preference_id: response.id,
+      estadoReserva: EstadoReserva.PENDIENTE_PAGO,
+      estadoPago: EstadoPago.PENDIENTE,
+      vehiculo
+    });
+
+    em.persist(nuevaReserva);
+    await em.flush();
+    
+    res.status(200).json({ preferenceId: response.id });
+    
+  } catch (error) {
+    console.error("Error en el back:", error);
+    res.status(500).json({ message: 'Error al procesar reserva' });
+  }
+};
+
+export const confirmarPago = async (req: Request, res: Response) => {
+  try {
+    const em = req.app.locals.em.fork();
+    const { preference_id, payment_id } = req.body;
+
+    const reserva = await em.findOne(Reserva, { mp_preference_id: preference_id }, { populate: ['vehiculo', 'vehiculo.modelo', 'vehiculo.modelo.marca'] });
+    
+    if (reserva && reserva.estadoPago !== EstadoPago.APROBADO) {
+      reserva.estadoPago = EstadoPago.APROBADO;
+      reserva.estadoReserva = EstadoReserva.ACTIVA;
+      reserva.mp_payment_id = payment_id;
+      reserva.vehiculo.estado = EstadoVehiculo.RESERVADO;
+
+      await em.flush();
+      const nombreAuto = `${reserva.vehiculo.modelo.marca.nombre} ${reserva.vehiculo.modelo.nombre}`;
+      await enviarEmailsReserva(reserva, nombreAuto);
+    }
+    
+    res.status(200).json({ message: 'OK' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error al confirmar' });
   }
 };
