@@ -16,6 +16,7 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
+    "start": "node dist/app.js",
     "start:dev": "tsx watch --env-file=.env src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src/**/*.ts"
