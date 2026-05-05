@@ -37,7 +37,9 @@ export const sanitizeReservaInput = (
 export const findAll = async (req: Request, res: Response) => {
   try {
     const em = RequestContext.getEntityManager()!;
-    const reservas = await em.find(Reserva, {}, { populate: ['vehiculo'] });
+    const reservas = await em.find(Reserva, {}, { 
+      populate: ['vehiculo', 'vehiculo.modelo', 'vehiculo.modelo.marca'] 
+    });
     res.status(200).json({ data: reservas });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -96,6 +98,8 @@ export const addPresencial = async (req: Request, res: Response) => {
     input.formaPago = FormaPago.EFECTIVO;
     input.mp_payment_id = null;
     input.mp_preference_id = null;
+    input.estadoReserva = EstadoReserva.ACTIVA;
+    input.estadoPago = EstadoPago.APROBADO;
     const fechaActual = new Date();
     const fechaVencimiento = new Date(fechaActual.setDate(fechaActual.getDate() + 21));
     input.fechaVenc = fechaVencimiento;
@@ -123,12 +127,24 @@ export const update = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Reserva no encontrada' });
     }
 
-    if (input.estado === EstadoReserva.VENCIDA && reservaToUpdate.estadoReserva !== EstadoReserva.VENCIDA) {
-      reservaToUpdate.vehiculo.estado = EstadoVehiculo.DISPONIBLE;
+    const nuevoEstado = req.body.estadoReserva || req.body.estado;
+
+    if (nuevoEstado) {
+      reservaToUpdate.estadoReserva = nuevoEstado;
+
+      if (nuevoEstado === EstadoReserva.CANCELADA || nuevoEstado === EstadoReserva.VENCIDA) {
+        reservaToUpdate.vehiculo.estado = EstadoVehiculo.DISPONIBLE; 
+      } 
+      else if (nuevoEstado === EstadoReserva.FINALIZADA) {
+        reservaToUpdate.vehiculo.estado = EstadoVehiculo.VENDIDO;
+      }
     }
+    // ------------------------------------
 
     em.assign(reservaToUpdate, input);
+    
     await em.flush();
+    
     res.status(200).json({ message: 'Reserva actualizada', data: reservaToUpdate });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -211,7 +227,7 @@ const preferenciaData = {
     const response = await preference.create(preferenciaData);
 
     const fechaVenc = new Date();
-    fechaVenc.setHours(fechaVenc.getHours() + 24); 
+    fechaVenc.setDate(fechaVenc.getDate() + 21); 
 
     const nuevaReserva = em.create(Reserva, {
       nombreCli: nombreFinal,

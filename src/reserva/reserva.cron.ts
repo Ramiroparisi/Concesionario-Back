@@ -11,13 +11,13 @@ export const iniciarCronReservas = (orm: MikroORM) => {
       const em = orm.em.fork();
       const ahora = new Date();
       const reservasVencidas = await em.find(Reserva, {
-        estado: EstadoReserva.ACTIVA,
+        estadoReserva: EstadoReserva.ACTIVA,
         fechaVenc: { $lt: ahora }
       }, { populate: ['vehiculo'] });
 
       if (reservasVencidas.length > 0) {
         for (const reserva of reservasVencidas) {
-          reserva.estado = EstadoReserva.VENCIDA;
+          reserva.estadoReserva = EstadoReserva.VENCIDA;
           reserva.vehiculo.estado = EstadoVehiculo.DISPONIBLE;
         }
         await em.flush();
