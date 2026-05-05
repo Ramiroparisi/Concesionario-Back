@@ -28,8 +28,8 @@ export const login = async (req: Request, res: Response) => {
     const diez_a = 10 * 365 * 24 * 60 * 60 * 1000; 
     res.cookie('token', token, {
       httpOnly: true, 
-      secure: false,
-      sameSite: 'lax', 
+      secure: true,
+      sameSite: 'none', 
       maxAge: diez_a,
       path: '/',
     });
@@ -53,8 +53,8 @@ export const verifyToken = (req: CustomRequest, res: Response) => {
 export const logout = (req: Request, res: Response) => {
   res.clearCookie('token', {
     httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
+    secure: true,
+    sameSite: 'none',
     path: '/'
   });
   return res.status(200).json({ message: "Sesión cerrada" });
