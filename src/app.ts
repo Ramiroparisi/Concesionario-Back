@@ -24,7 +24,7 @@ async function bootstrap() {
     
     console.log('Se ha realizado la conexión a la bdd');
     app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+      origin:[process.env.FRONTEND_URL || 'http://localhost:3001', 'https://concesionario-front-navy.vercel.app'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization']
