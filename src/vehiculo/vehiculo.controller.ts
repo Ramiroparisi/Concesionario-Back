@@ -3,8 +3,6 @@ import { RequestContext } from '@mikro-orm/core';
 import { Vehiculo } from './vehiculo.entity.js';
 import { Modelo } from '../modelo/modelo.entity.js';
 import { Multimedia } from '../multimedia/multimedia.entity.js';
-import fs from 'fs';
-import path from 'path';
 
 export const sanitizeVehiculoInput = (
   req: Request,
@@ -104,7 +102,7 @@ export const add = async (req: Request, res: Response) => {
       const archivos = req.files as Express.Multer.File[];
       archivos.forEach((archivo, index) => {
         const nuevaFoto = em.create(Multimedia, {
-          archivo: archivo.filename,
+          archivo: archivo.path,
           vehiculo: nuevoVehiculo,
           orden: index
         });
@@ -133,17 +131,13 @@ export const update = async (req: Request, res: Response) => {
     em.assign(VehiculoToUpdate, req.body.sanitizedInput ?? req.body);
     
     if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      VehiculoToUpdate.multimedia.getItems().forEach((m: Multimedia) => {
-      const filePath = path.resolve('uploads', m.archivo);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      });
 
       VehiculoToUpdate.multimedia.removeAll();
 
       const archivos = req.files as Express.Multer.File[];
       archivos.forEach((archivo, index) => {
         const nuevaFoto = em.create(Multimedia, {
-          archivo: archivo.filename,
+          archivo: archivo.path,
           vehiculo: VehiculoToUpdate,
           orden: index
         });
@@ -171,12 +165,7 @@ export const remove = async (req: Request, res: Response) => {
     if (!vehiculo) {
       return res.status(404).json({ message: 'Vehículo no encontrado' });
     }
-
-    vehiculo.multimedia.getItems().forEach((m: Multimedia) => {
-    const filePath = path.resolve('uploads', m.archivo);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-  });
-
+    
     await em.remove(vehiculo).flush();
     res.status(200).json({ message: 'Vehículo eliminado' }); 
   } catch (error: unknown) {
