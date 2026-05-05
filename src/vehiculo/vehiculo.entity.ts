@@ -2,7 +2,7 @@ import { Entity, Property, Enum, ManyToOne, OneToMany} from '@mikro-orm/decorato
 import { Collection, Cascade} from '@mikro-orm/core';
 import { Modelo } from '../modelo/modelo.entity.js';
 import { Usuario } from '../usuario/usuario.entity.js'; 
-import { Multimedia } from '../multimedia/multimedia.entity.js'; 
+import type { Multimedia } from '../multimedia/multimedia.entity.js'; 
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 import { Reserva } from '../reserva/reserva.entity.js'; 
 
@@ -51,7 +51,7 @@ export class Vehiculo extends BaseEntity {
   @ManyToOne(() => Usuario, { nullable: true })
   vendedor?: Usuario;
 
-  @OneToMany(() => Multimedia, (multimedia) => multimedia.vehiculo, { 
+  @OneToMany(() => 'Multimedia' as any, (multimedia: Multimedia) => multimedia.vehiculo, { 
     cascade: [Cascade.ALL], 
     orphanRemoval: true 
   })
