@@ -1,6 +1,6 @@
 import { Entity, Property, Enum, ManyToOne } from '@mikro-orm/decorators/legacy';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
-import { Vehiculo } from '../vehiculo/vehiculo.entity.js';
+import type { Vehiculo } from '../vehiculo/vehiculo.entity.js';
 
 export enum EstadoReserva {
   PENDIENTE_PAGO = 'Pendiente de Pago',
@@ -65,6 +65,6 @@ export class Reserva extends BaseEntity {
   @Enum(() => FormaPago)
   formaPago: FormaPago = FormaPago.MERCADO_PAGO;
 
-  @ManyToOne(() => Vehiculo)
+  @ManyToOne(() => 'Vehiculo' as any)
   vehiculo!: Vehiculo;
 }
