@@ -1,6 +1,6 @@
 import { Entity, Property, Enum, OneToMany, BeforeCreate, BeforeUpdate} from '@mikro-orm/decorators/legacy';
 import { Collection } from '@mikro-orm/core';
-import { Vehiculo } from '../vehiculo/vehiculo.entity.js';
+import type { Vehiculo } from '../vehiculo/vehiculo.entity.js';
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
 import { hashPassword } from '../shared/utils/password.utils.js';
 
@@ -42,7 +42,7 @@ export class Usuario extends BaseEntity{
   @Enum(() => RolUsuario)
   rol: RolUsuario = RolUsuario.EMPLEADO;
 
-  @OneToMany(() => Vehiculo, (vehiculo) => vehiculo.vendedor)
+  @OneToMany(() => 'Vehiculo' as any, (vehiculo: Vehiculo) => vehiculo.vendedor)
   vehiculosVendidos = new Collection<Vehiculo>(this);
 
   @BeforeCreate()

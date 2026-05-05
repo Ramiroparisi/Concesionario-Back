@@ -1,10 +1,10 @@
 import { Entity, Property, Enum, ManyToOne, OneToMany} from '@mikro-orm/decorators/legacy';
 import { Collection, Cascade} from '@mikro-orm/core';
-import { Modelo } from '../modelo/modelo.entity.js';
-import { Usuario } from '../usuario/usuario.entity.js'; 
+import type { Modelo } from '../modelo/modelo.entity.js';
+import type{ Usuario } from '../usuario/usuario.entity.js'; 
 import type { Multimedia } from '../multimedia/multimedia.entity.js'; 
 import { BaseEntity } from '../shared/db/baseEntity.entity.js';
-import { Reserva } from '../reserva/reserva.entity.js'; 
+import type { Reserva } from '../reserva/reserva.entity.js'; 
 
 
 export enum EstadoVehiculo {
@@ -45,10 +45,10 @@ export class Vehiculo extends BaseEntity {
   @Enum(() => Moneda)
   moneda: Moneda = Moneda.USD;
 
-  @ManyToOne(() => Modelo)
+  @ManyToOne(() => 'Modelo' as any)
   modelo!: Modelo;
 
-  @ManyToOne(() => Usuario, { nullable: true })
+  @ManyToOne(() => 'Usuario' as any, { nullable: true })
   vendedor?: Usuario;
 
   @OneToMany(() => 'Multimedia' as any, (multimedia: Multimedia) => multimedia.vehiculo, { 
@@ -57,6 +57,6 @@ export class Vehiculo extends BaseEntity {
   })
   multimedia = new Collection<Multimedia>(this);
 
-  @OneToMany(() => Reserva, (reserva) => reserva.vehiculo)
+  @OneToMany(() => 'Reserva' as any, (reserva: Reserva) => reserva.vehiculo)
   reservas = new Collection<Reserva>(this);
 }
