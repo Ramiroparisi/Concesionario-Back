@@ -214,11 +214,11 @@ const preferenciaData = {
           surname: apellidoCli
         },
         back_urls: {
-          success: `http://localhost:3001/Vehiculos/${vehiculo.id}`,
-          failure: `http://localhost:3001/Vehiculos/${vehiculo.id}`,
-          pending: `http://localhost:3001/Vehiculos/${vehiculo.id}`
-        }
-        // auto_return: 'approved' 
+          success: `${process.env.FRONTEND_URL}/Vehiculos/${vehiculoId}`,
+          failure: `${process.env.FRONTEND_URL}/Vehiculos/${vehiculoId}`,
+          pending: `${process.env.FRONTEND_URL}/Vehiculos/${vehiculoId}`
+        },
+        auto_return: 'approved' 
       }
     };
     console.log("Objeto a enviar a Mercado Pago:", JSON.stringify(preferenciaData, null, 2));
