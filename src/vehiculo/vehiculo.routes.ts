@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { sanitizeVehiculoInput,findOne, findAll, add, update, remove } from './vehiculo.controller.js';
 import { validateVehiculo } from './vehiculo.validator.js';
 import { uploadCloudinary } from '../shared/utils/cloudinary.js';
+import { checkAuth } from '../shared/middleware/auth.middleware.js';
 import multer from 'multer';
 
 const storage = multer.diskStorage({
@@ -19,6 +20,6 @@ export const vehiculoRouter = Router();
 
 vehiculoRouter.get('/', findAll);
 vehiculoRouter.get('/:id', findOne);
-vehiculoRouter.post('/', uploadCloudinary.array('fotos', 10), validateVehiculo, sanitizeVehiculoInput, add);
-vehiculoRouter.put('/:id', uploadCloudinary.array('fotos', 10), validateVehiculo, sanitizeVehiculoInput, update);
-vehiculoRouter.delete('/:id', remove);
+vehiculoRouter.post('/', uploadCloudinary.array('fotos', 10), validateVehiculo, checkAuth, sanitizeVehiculoInput, add);
+vehiculoRouter.put('/:id', uploadCloudinary.array('fotos', 10), validateVehiculo, checkAuth, sanitizeVehiculoInput, update);
+vehiculoRouter.delete('/:id', checkAuth, remove);

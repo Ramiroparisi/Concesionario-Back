@@ -3,7 +3,7 @@ import { RequestContext } from '@mikro-orm/core';
 import jwt from 'jsonwebtoken';
 import { Usuario } from '../usuario/usuario.entity.js';
 import { comparePassword } from '../shared/utils/password.utils.js';
-import { CustomRequest } from './authMiddleware.js';
+import { AuthRequest } from '../shared/middleware/auth.middleware.js';
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -43,10 +43,10 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const verifyToken = (req: CustomRequest, res: Response) => {
+export const verifyToken = (req: AuthRequest, res: Response) => {
   return res.status(200).json({ 
     valid: true, 
-    user: req.user 
+    user: req.usuario 
   });
 };
 
